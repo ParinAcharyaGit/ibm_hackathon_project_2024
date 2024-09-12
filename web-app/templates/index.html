@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BusinessWiseAI</title>
+  
+  <!-- CSS Links -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/styles.css') }}">
+  
+  <!-- JS Scripts -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+  
+  <!-- Custom CSS -->
+  <style>
+    body {
+      background-color: #f7f9fc;
+    }
+
+    .topnav {
+      background-color: #0056b3;
+      padding: 10px 0;
+    }
+
+    .topnav a {
+      color: white;
+      padding: 14px 20px;
+      text-decoration: none;
+      text-align: center;
+      font-size: 18px;
+    }
+
+    .form-container {
+      margin-top: 30px;
+      background-color: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-title {
+      color: #0056b3;
+      font-weight: bold;
+    }
+
+    .btn-custom {
+      background-color: #0056b3;
+      color: white;
+    }
+
+    .output-container {
+      margin-top: 30px;
+      display: none;
+    }
+
+    .spinner-border {
+      color: #0056b3;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="topnav" id="myTopnav">
+    <a class="active" href="#"><i class="fa fa-fw fa-home"></i> Home</a>
+    <a href="#"><i class="fa fa-fw fa-envelope"></i> Contact</a>
+    <a href="https://github.com/IBM/predict-insurance-charges-with-ai"><i class="fa fa-info-circle"></i> About</a>
+  </div>
+
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="form-container">
+          <h2 class="text-center form-title">Startup Profit Predictor</h2>
+          <p class="text-center">Powered by IBM Watson Machine Learning Models.</p>
+          <p class="text-center">Fill out the form below to calculate your estimated annual profit.</p>
+
+          <!-- Form Start -->
+          <form id="profit-form">
+            <div class="form-group">
+              <label for="burnRate">Burn Rate</label>
+              <input type="number" step="0.01" class="form-control" id="burnRate" placeholder="Enter Burn Rate (e.g., 0.5)" required>
+            </div>
+            <div class="form-group">
+              <label for="revenue">Revenue</label>
+              <input type="number" class="form-control" id="revenue" placeholder="Enter Monthly Revenue" required>
+            </div>
+            <div class="form-group">
+              <label for="customerAcquisitionCost">Customer Acquisition Cost</label>
+              <input type="number" class="form-control" id="customerAcquisitionCost" placeholder="Enter Customer Acquisition Cost" required>
+            </div>
+            <div class="form-group">
+              <label for="customerLifetimeValue">Customer Lifetime Value</label>
+              <input type="number" class="form-control" id="customerLifetimeValue" placeholder="Enter Customer Lifetime Value" required>
+            </div>
+            <div class="form-group">
+              <label for="monthlyRecurringRevenue">Monthly Recurring Revenue</label>
+              <input type="number" class="form-control" id="monthlyRecurringRevenue" placeholder="Enter Monthly Recurring Revenue" required>
+            </div>
+            <div class="form-group">
+              <label for="churnRate">Churn Rate</label>
+              <input type="number" step="0.01" class="form-control" id="churnRate" placeholder="Enter Churn Rate (e.g., 0.05)" required>
+            </div>
+            <div class="form-group">
+              <label for="marketGrowthRate">Market Growth Rate</label>
+              <input type="number" step="0.01" class="form-control" id="marketGrowthRate" placeholder="Enter Market Growth Rate (e.g., 0.1)" required>
+            </div>
+            <div class="form-group">
+              <label for="marketingSpend">Marketing Spend</label>
+              <input type="number" class="form-control" id="marketingSpend" placeholder="Enter Monthly Marketing Spend" required>
+            </div>
+            <div class="form-group">
+              <label for="rdSpend">R&D Spend</label>
+              <input type="number" class="form-control" id="rdSpend" placeholder="Enter Monthly R&D Spend" required>
+            </div>
+            <div class="form-group">
+              <label for="profitMargin">Profit Margin</label>
+              <input type="number" step="0.01" class="form-control" id="profitMargin" placeholder="Enter Profit Margin (e.g., 0.2)" required>
+            </div>
+            <div class="form-group">
+              <label for="averageEmployeeSalary">Average Employee Salary</label>
+              <input type="number" class="form-control" id="averageEmployeeSalary" placeholder="Enter Average Employee Salary" required>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="button" class="btn btn-custom btn-block" onclick="calculateProfit()">Calculate Estimated Annual Profit</button>
+          </form>
+          <!-- Form End -->
+
+          <!-- Loading Spinner -->
+          <div class="d-flex justify-content-center mt-4">
+            <div id="loader" class="spinner-border" style="display: none;"></div>
+          </div>
+
+          <!-- Output Container -->
+          <div class="output-container text-center">
+            <h4>Estimated Annual Profit:</h4>
+            <h2 id="estimatedProfit">$0</h2>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function calculateProfit() {
+      // Show spinner
+      document.getElementById('loader').style.display = 'block';
+      document.querySelector('.output-container').style.display = 'none';
+
+      // Get form values
+      var burnRate = parseFloat(document.getElementById('burnRate').value);
+      var revenue = parseFloat(document.getElementById('revenue').value);
+      var customerAcquisitionCost = parseFloat(document.getElementById('customerAcquisitionCost').value);
+      var customerLifetimeValue = parseFloat(document.getElementById('customerLifetimeValue').value);
+      var monthlyRecurringRevenue = parseFloat(document.getElementById('monthlyRecurringRevenue').value);
+      var churnRate = parseFloat(document.getElementById('churnRate').value);
+      var marketGrowthRate = parseFloat(document.getElementById('marketGrowthRate').value);
+      var marketingSpend = parseFloat(document.getElementById('marketingSpend').value);
+      var rdSpend = parseFloat(document.getElementById('rdSpend').value);
+      var profitMargin = parseFloat(document.getElementById('profitMargin').value);
+      var averageEmployeeSalary = parseFloat(document.getElementById('averageEmployeeSalary').value);
+
+      // Perform simple calculation for estimated annual profit (this is a placeholder logic)
+      var estimatedAnnualProfit = (revenue * 12 * profitMargin) - (marketingSpend + rdSpend + (averageEmployeeSalary * burnRate));
+
+      // Simulate delay to show spinner
+      setTimeout(function() {
+        // Hide spinner
+        document.getElementById('loader').style.display = 'none';
+
+        // Show result
+        document.querySelector('.output-container').style.display = 'block';
+        document.getElementById('estimatedProfit').innerText = '$' + estimatedAnnualProfit.toFixed(2);
+      }, 2000);
+    }
+  </script>
+
+</body>
+
+</html>
