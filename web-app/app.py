@@ -72,7 +72,50 @@ def predict():
 
 @app.route('/chat')
 def chat():
-    return render_template("chat.html")
+    if request.method == 'POST':
+        # If a file is uploaded, handle it
+        file = request.files.get('document')
+        message = request.form.get('message')
+
+        # Prepare the body for the request
+        body = {
+            "input": f"""<|system|>
+            You are Granite Chat, an AI language model developed by IBM. You carefully follow instructions and provide helpful responses.
+            <|assistant|>{message or ''}
+            """,
+            "parameters": {
+                "decoding_method": "greedy",
+                "max_new_tokens": 900,
+                "repetition_penalty": 1.33
+            },
+            "model_id": "ibm/granite-13b-chat-v2",
+            "project_id": "acaf9312-4593-4343-b3c4-3ddd33f7f9e3"
+        }
+
+        # Use your IAM token for authorization
+        headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "Authorization": "Bearer eyJraWQiOiIyMDI0MDkwMjA4NDIiLCJhbGciOiJSUzI1NiJ9.eyJpYW1faWQiOiJJQk1pZC02NjgwMDBYNjFPIiwiaWQiOiJJQk1pZC02NjgwMDBYNjFPIiwicmVhbG1pZCI6IklCTWlkIiwianRpIjoiY2Q5YjE4ZDQtMTc0ZC00N2NiLWJhZDQtODZmNzUyZTRlYWEyIiwiaWRlbnRpZmllciI6IjY2ODAwMFg2MU8iLCJnaXZlbl9uYW1lIjoiUGFyaW4iLCJmYW1pbHlfbmFtZSI6IkFjaGFyeWEiLCJuYW1lIjoiUGFyaW4gQWNoYXJ5YSIsImVtYWlsIjoiYWNoYXJ5YXBhcmluMDVAZ21haWwuY29tIiwic3ViIjoiYWNoYXJ5YXBhcmluMDVAZ21haWwuY29tIiwiYXV0aG4iOnsic3ViIjoiYWNoYXJ5YXBhcmluMDVAZ21haWwuY29tIiwiaWFtX2lkIjoiSUJNaWQtNjY4MDAwWDYxTyIsIm5hbWUiOiJQYXJpbiBBY2hhcnlhIiwiZ2l2ZW5fbmFtZSI6IlBhcmluIiwiZmFtaWx5X25hbWUiOiJBY2hhcnlhIiwiZW1haWwiOiJhY2hhcnlhcGFyaW4wNUBnbWFpbC5jb20ifSwiYWNjb3VudCI6eyJ2YWxpZCI6dHJ1ZSwiYnNzIjoiYmFjN2E4NzUxZWU5NDk4NTk4NGFhMGZiNmM1N2YzOWQiLCJpbXNfdXNlcl9pZCI6IjEyNjkyMTg3IiwiZnJvemVuIjp0cnVlLCJpbXMiOiIyNzQ4MTIyIn0sImlhdCI6MTcyNjE2MzE3MCwiZXhwIjoxNzI2MTY2NzcwLCJpc3MiOiJodHRwczovL2lhbS5jbG91ZC5pYm0uY29tL29pZGMvdG9rZW4iLCJncmFudF90eXBlIjoidXJuOmlibTpwYXJhbXM6b2F1dGg6Z3JhbnQtdHlwZTphcGlrZXkiLCJzY29wZSI6ImlibSBvcGVuaWQiLCJjbGllbnRfaWQiOiJkZWZhdWx0IiwiYWNyIjoxLCJhbXIiOlsicHdkIl19.bLnZ34rsEsdIq8hWS_75xu3bAVKLXIg9AmKURBEj3l3GBfz_gAUTafvDqJW0Vap_no-pyv7TVf9UClCc_3HCf3sMF7n28UW86M6o9eSgmc_d98Be1NmpgYXTCjfI9Tu-mOQpFJaNfL2VjKlcTsNgFzAeF6FaBtApZ3Amgr7cd-OQoOggEnKvNBuu96uUhN6ePcv3UC-tDpkmeYJDnuBed5wz6S3SRgncsgmJpVeRCCRNeRdsKTAgsLVOiEjZZuPxCgROo3T7N3sVBRgfwbRFEFV6imNmo0lYCOhleiAUPyOeHBld9PQGGx6Fc3WCoTazhkrl7AihoqmG_K4DAufMwA"
+        }
+
+        # Make the request to the IBM model API
+        response = requests.post(
+            "https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29",
+            json=body,
+            headers=headers
+        )
+
+        # Handle the response
+        if response.status_code == 200:
+            data = response.json()
+            result = data.get('result', 'No response')
+        else:
+            result = f"Error: {response.status_code}"
+
+        return jsonify({'result': result})
+
+    return render_template('chat.html')
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')

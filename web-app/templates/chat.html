@@ -1,13 +1,13 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-  <!-- Required meta tags -->
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Chat with AI Model</title>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat with Granite AI</title>
+  
   <!-- CSS Links -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
 
   <!-- JS Scripts -->
@@ -16,29 +16,56 @@
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
 </head>
 
-<body>
-  <div class="container">
-    <h2 class="text-center mt-4">Chat with AI Model</h2>
+<body style="background-color: #f8f9fa;">
+  <div class="container mt-5">
+    <h2>Chat with Granite AI</h2>
+    <p>Upload a document or type your message to get responses from the AI model.</p>
 
-    <form class="mt-4" action="/chat" enctype="multipart/form-data">
+    <form id="chatForm" method="POST" enctype="multipart/form-data">
       <div class="form-group">
-        <label for="textInput">Text Input:</label>
-        <textarea class="form-control" id="textInput" name="textInput" rows="4" placeholder="Enter your text here..."></textarea>
+        <label for="message">Enter a message:</label>
+        <textarea class="form-control" id="message" name="message" rows="3"></textarea>
       </div>
-      
+
       <div class="form-group">
-        <label for="fileInput">Upload Document:</label>
-        <input type="file" class="form-control-file" id="fileInput" name="fileInput">
+        <label for="document">Upload a document (optional):</label>
+        <input type="file" class="form-control-file" id="document" name="document">
       </div>
-      
+
       <button type="submit" class="btn btn-primary">Submit</button>
     </form>
 
-    {% if response %}
-      <h3 class="mt-4">Response:</h3>
-      <pre>{{ response }}</pre>
-    {% endif %}
+    <hr>
+
+    <h4>Response from Granite AI:</h4>
+    <div id="response" class="alert alert-info" role="alert">
+      Your response will appear here.
+    </div>
   </div>
+
+  <script>
+    $(document).ready(function () {
+      $('#chatForm').on('submit', function (e) {
+        e.preventDefault();
+
+        var formData = new FormData(this);
+        
+        $.ajax({
+          type: 'POST',
+          url: '/chat',
+          data: formData,
+          processData: false,
+          contentType: false,
+          success: function (response) {
+            $('#response').text(response.result);
+          },
+          error: function (error) {
+            $('#response').text('An error occurred.');
+          }
+        });
+      });
+    });
+  </script>
 </body>
 
 </html>
