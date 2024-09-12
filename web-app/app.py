@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from forms import PredictForm
 import requests
 import json
@@ -70,52 +70,62 @@ def predict():
 
     return render_template('index.html', form=form)
 
-@app.route('/chat')
+@app.route('/chat', methods=['POST'])
 def chat():
-    if request.method == 'POST':
-        # If a file is uploaded, handle it
-        file = request.files.get('document')
-        message = request.form.get('message')
+    message = request.form.get('message')
+    document = request.files.get('document')
 
-        # Prepare the body for the request
-        body = {
-            "input": f"""<|system|>
-            You are Granite Chat, an AI language model developed by IBM. You carefully follow instructions and provide helpful responses.
-            <|assistant|>{message or ''}
-            """,
-            "parameters": {
-                "decoding_method": "greedy",
-                "max_new_tokens": 900,
-                "repetition_penalty": 1.33
-            },
-            "model_id": "ibm/granite-13b-chat-v2",
-            "project_id": "acaf9312-4593-4343-b3c4-3ddd33f7f9e3"
+    # Prepare request to the AI model
+    url = "https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"
+    body = {
+        "input": f"""<|system|>
+        You are Granite Chat, an AI language model developed by IBM. You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior. You always respond to greetings (for example, hi, hello, g'day, morning, afternoon, evening, night, what's up, nice to meet you, sup, etc) with "Hello! I am Granite Chat, created by IBM. How can I help you today?". Please do not say anything else and do not start a conversation.
+        <|assistant|>
+        {message}
+        """,
+        "parameters": {
+            "decoding_method": "greedy",
+            "max_new_tokens": 900,
+            "repetition_penalty": 1.05
+        },
+        "model_id": "ibm/granite-13b-chat-v2",
+        "project_id": "acaf9312-4593-4343-b3c4-3ddd33f7f9e3",
+        "moderations": {
+            "hap": {
+                "input": {
+                    "enabled": True,
+                    "threshold": 0.5,
+                    "mask": {
+                        "remove_entity_value": True
+                    }
+                },
+                "output": {
+                    "enabled": True,
+                    "threshold": 0.5,
+                    "mask": {
+                        "remove_entity_value": True
+                    }
+                }
+            }
         }
+    }
 
-        # Use your IAM token for authorization
-        headers = {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-            "Authorization": "Bearer eyJraWQiOiIyMDI0MDkwMjA4NDIiLCJhbGciOiJSUzI1NiJ9.eyJpYW1faWQiOiJJQk1pZC02NjgwMDBYNjFPIiwiaWQiOiJJQk1pZC02NjgwMDBYNjFPIiwicmVhbG1pZCI6IklCTWlkIiwianRpIjoiY2Q5YjE4ZDQtMTc0ZC00N2NiLWJhZDQtODZmNzUyZTRlYWEyIiwiaWRlbnRpZmllciI6IjY2ODAwMFg2MU8iLCJnaXZlbl9uYW1lIjoiUGFyaW4iLCJmYW1pbHlfbmFtZSI6IkFjaGFyeWEiLCJuYW1lIjoiUGFyaW4gQWNoYXJ5YSIsImVtYWlsIjoiYWNoYXJ5YXBhcmluMDVAZ21haWwuY29tIiwic3ViIjoiYWNoYXJ5YXBhcmluMDVAZ21haWwuY29tIiwiYXV0aG4iOnsic3ViIjoiYWNoYXJ5YXBhcmluMDVAZ21haWwuY29tIiwiaWFtX2lkIjoiSUJNaWQtNjY4MDAwWDYxTyIsIm5hbWUiOiJQYXJpbiBBY2hhcnlhIiwiZ2l2ZW5fbmFtZSI6IlBhcmluIiwiZmFtaWx5X25hbWUiOiJBY2hhcnlhIiwiZW1haWwiOiJhY2hhcnlhcGFyaW4wNUBnbWFpbC5jb20ifSwiYWNjb3VudCI6eyJ2YWxpZCI6dHJ1ZSwiYnNzIjoiYmFjN2E4NzUxZWU5NDk4NTk4NGFhMGZiNmM1N2YzOWQiLCJpbXNfdXNlcl9pZCI6IjEyNjkyMTg3IiwiZnJvemVuIjp0cnVlLCJpbXMiOiIyNzQ4MTIyIn0sImlhdCI6MTcyNjE2MzE3MCwiZXhwIjoxNzI2MTY2NzcwLCJpc3MiOiJodHRwczovL2lhbS5jbG91ZC5pYm0uY29tL29pZGMvdG9rZW4iLCJncmFudF90eXBlIjoidXJuOmlibTpwYXJhbXM6b2F1dGg6Z3JhbnQtdHlwZTphcGlrZXkiLCJzY29wZSI6ImlibSBvcGVuaWQiLCJjbGllbnRfaWQiOiJkZWZhdWx0IiwiYWNyIjoxLCJhbXIiOlsicHdkIl19.bLnZ34rsEsdIq8hWS_75xu3bAVKLXIg9AmKURBEj3l3GBfz_gAUTafvDqJW0Vap_no-pyv7TVf9UClCc_3HCf3sMF7n28UW86M6o9eSgmc_d98Be1NmpgYXTCjfI9Tu-mOQpFJaNfL2VjKlcTsNgFzAeF6FaBtApZ3Amgr7cd-OQoOggEnKvNBuu96uUhN6ePcv3UC-tDpkmeYJDnuBed5wz6S3SRgncsgmJpVeRCCRNeRdsKTAgsLVOiEjZZuPxCgROo3T7N3sVBRgfwbRFEFV6imNmo0lYCOhleiAUPyOeHBld9PQGGx6Fc3WCoTazhkrl7AihoqmG_K4DAufMwA"
-        }
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": "Bearer NEW_ACCESS_TOKEN"  # Replace with the new token
+    }
 
-        # Make the request to the IBM model API
-        response = requests.post(
-            "https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29",
-            json=body,
-            headers=headers
-        )
-
-        # Handle the response
-        if response.status_code == 200:
-            data = response.json()
-            result = data.get('result', 'No response')
-        else:
-            result = f"Error: {response.status_code}"
-
+    # Make the request to the AI model
+    try:
+        response = requests.post(url, headers=headers, json=body)
+        response.raise_for_status()  # Raise an error for HTTP errors
+        data = response.json()
+        
+        result = data.get('results', [{}])[0].get('generated_text', 'No response received')
         return jsonify({'result': result})
-
-    return render_template('chat.html')
+    except requests.exceptions.RequestException as e:
+        return jsonify({'error': f'An error occurred: {str(e)}'}), 500
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
