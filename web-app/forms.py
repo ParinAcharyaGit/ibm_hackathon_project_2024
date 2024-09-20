@@ -1,20 +1,25 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, DecimalField, IntegerField
+from wtforms import StringField, DecimalField, IntegerField, SelectField, SubmitField, TextAreaField, FileField
 from wtforms.validators import DataRequired
 
 class PredictForm(FlaskForm):
-    burnRate = DecimalField('Burn Rate', validators=[DataRequired()])
-    revenue = DecimalField('Revenue', validators=[DataRequired()])
-    customerAcquisitionCost = DecimalField('Customer Acquisition Cost', validators=[DataRequired()])
-    customerLifetimeValue = DecimalField('Customer Lifetime Value', validators=[DataRequired()])
-    monthlyRecurringRevenue = DecimalField('Monthly Recurring Revenue', validators=[DataRequired()])
-    churnRate = DecimalField('Churn Rate (%)', validators=[DataRequired()])
-    marketGrowthRate = DecimalField('Market Growth Rate (%)', validators=[DataRequired()])
-    marketingSpend = DecimalField('Marketing Spend', validators=[DataRequired()])
-    rdSpend = DecimalField('R&D Spend', validators=[DataRequired()])
-    profitMargin = DecimalField('Profit Margin (%)', validators=[DataRequired()])
-    averageEmployeeSalary = DecimalField('Average Employee Salary', validators=[DataRequired()])
-    
+    age = DecimalField('Age', validators=[DataRequired()])
+    contract_length = SelectField('Contract Length', choices=[('short', 'Short'), ('medium', 'Medium'), ('long', 'Long')], validators=[DataRequired()])
+    customer_id = DecimalField('Customer ID', validators=[DataRequired()])
+    gender = SelectField('Gender', choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Other')], validators=[DataRequired()])
+    last_interaction = DecimalField('Last Interaction', validators=[DataRequired()])
+    payment_delay = DecimalField('Payment Delay', validators=[DataRequired()])
+    subscription_type = SelectField('Subscription Type', choices=[('basic', 'Basic'), ('premium', 'Premium'), ('family', 'Family')], validators=[DataRequired()])
+    support_calls = IntegerField('Support Calls', validators=[DataRequired()])
+    tenure = DecimalField('Tenure (Months)', validators=[DataRequired()])
+    total_spend = DecimalField('Total Spend', validators=[DataRequired()])
+    usage_frequency = DecimalField('Usage Frequency', validators=[DataRequired()])
+
     submit = SubmitField('Predict')
-    
+
     abc = ""  # This is a regular variable, not a form field, used for the prediction output
+
+class ChatForm(FlaskForm):
+    message = TextAreaField('Enter a message:', validators=[DataRequired()])
+    document = FileField('Upload a document (optional):')
+    submit = SubmitField('Submit')

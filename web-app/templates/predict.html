@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Customer Churn Predictor</title>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Custom CSS (Optional) -->
+  <style>
+    body {
+      background-color: #f7f9fc;
+    }
+
+    .topnav {
+      background-color: #0056b3;
+      padding: 10px 0;
+    }
+
+    .topnav a {
+      color: white;
+      text-decoration: none;
+    }
+
+    .form-container {
+      background-color: white;
+      border-radius: 0.5rem;
+      box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .spinner-border {
+      border-top-color: #0056b3;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="topnav bg-blue-700 text-white py-4">
+    <div class="flex justify-center space-x-4">
+      <a href="/" class="hover:bg-blue-900 px-4 py-2 rounded"><i class="fa fa-fw fa-home"></i> Home</a>
+      <a href="/chat" class="hover:bg-blue-900 px-4 py-2 rounded"><i class="fa fa-comments"></i> Chat</a>
+      <a href="/predict" class="hover:bg-blue-900 px-4 py-2 rounded">Predict</a>
+    </div>
+  </div>
+
+  <div class="container mx-auto py-8">
+    <div class="flex justify-center">
+      <div class="w-full md:w-2/3 lg:w-1/2">
+        <div class="form-container p-8">
+          <h2 class="text-center text-blue-700 font-bold text-2xl">Customer Churn Predictor</h2>
+          <p class="text-center text-gray-600">Powered by IBM Watson Machine Learning Models.</p>
+          <p class="text-center text-gray-600 mb-6">Fill out the form below to predict customer churn.</p>
+
+          <!-- Form Start -->
+          <form id="predictForm" class="space-y-4" method = "get" action = "/predict" onsubmit="handleSubmit(event)">
+            <div class="form-group">
+              <label for="age" class="block text-gray-700">Age</label>
+              <input type="number" step="0.01" class="form-control border-gray-300 rounded-lg w-full p-2" id="age" name="age" placeholder="Enter Age" required>
+            </div>
+            <div class="form-group">
+              <label for="contract_length" class="block text-gray-700">Contract Length</label>
+              <input type="text" class="form-control border-gray-300 rounded-lg w-full p-2" id="contract_length" name="contract_length" placeholder="Enter Contract Length" required>
+            </div>
+            <div class="form-group">
+              <label for="customer_id" class="block text-gray-700">Customer ID</label>
+              <input type="number" class="form-control border-gray-300 rounded-lg w-full p-2" id="customer_id" name="customer_id" placeholder="Enter Customer ID" required>
+            </div>
+            <div class="form-group">
+              <label for="gender" class="block text-gray-700">Gender</label>
+              <input type="text" class="form-control border-gray-300 rounded-lg w-full p-2" id="gender" name="gender" placeholder="Enter Gender" required>
+            </div>
+            <div class="form-group">
+              <label for="last_interaction" class="block text-gray-700">Last Interaction</label>
+              <input type="number" class="form-control border-gray-300 rounded-lg w-full p-2" id="last_interaction" name="last_interaction" placeholder="Enter Last Interaction (days ago)" required>
+            </div>
+            <div class="form-group">
+              <label for="payment_delay" class="block text-gray-700">Payment Delay</label>
+              <input type="number" step="0.01" class="form-control border-gray-300 rounded-lg w-full p-2" id="payment_delay" name="payment_delay" placeholder="Enter Payment Delay" required>
+            </div>
+            <div class="form-group">
+              <label for="subscription_type" class="block text-gray-700">Subscription Type</label>
+              <input type="text" class="form-control border-gray-300 rounded-lg w-full p-2" id="subscription_type" name="subscription_type" placeholder="Enter Subscription Type" required>
+            </div>
+            <div class="form-group">
+              <label for="support_calls" class="block text-gray-700">Support Calls</label>
+              <input type="number" class="form-control border-gray-300 rounded-lg w-full p-2" id="support_calls" name="support_calls" placeholder="Enter Support Calls" required>
+            </div>
+            <div class="form-group">
+              <label for="tenure" class="block text-gray-700">Tenure</label>
+              <input type="number" class="form-control border-gray-300 rounded-lg w-full p-2" id="tenure" name="tenure" placeholder="Enter Tenure (months)" required>
+            </div>
+            <div class="form-group">
+              <label for="total_spend" class="block text-gray-700">Total Spend</label>
+              <input type="number" class="form-control border-gray-300 rounded-lg w-full p-2" id="total_spend" name="total_spend" placeholder="Enter Total Spend" required>
+            </div>
+            <div class="form-group">
+              <label for="usage_frequency" class="block text-gray-700">Usage Frequency</label>
+              <input type="number" class="form-control border-gray-300 rounded-lg w-full p-2" id="usage_frequency" name="usage_frequency" placeholder="Enter Usage Frequency" required>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn bg-blue-700 text-white w-full py-2 rounded-lg hover:bg-blue-900">Predict Churn</button>
+          </form>
+          <!-- Form End -->
+
+          <!-- Loading Spinner -->
+          <div class="flex justify-center mt-4">
+            <div id="loader" class="spinner-border border-t-2 border-blue-700 w-12 h-12 animate-spin" style="display: none;"></div>
+          </div>
+
+          <!-- Output Container -->
+          <div id="outputContainer" class="output-container text-center mt-4" style="display: none;">
+            <h4 class="text-lg font-semibold text-gray-700">Prediction Result:</h4>
+            <h2 id="churnPrediction" class="text-3xl text-blue-700 font-bold">0%</h2>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+
+</html>

@@ -13,7 +13,6 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 
 <body style="background-color: #f8f9fa;">
@@ -21,10 +20,10 @@
     <h2>Chat with Granite AI</h2>
     <p>Upload a document or type your message to get responses from the AI model.</p>
 
-    <form id="chatForm" method="POST" enctype="multipart/form-data">
+    <form id="chatForm" method="POST" action="/chat" enctype="multipart/form-data">
       <div class="form-group">
         <label for="message">Enter a message:</label>
-        <textarea class="form-control" id="message" name="message" rows="3"></textarea>
+        <textarea class="form-control" id="message" name="message" rows="3" required></textarea>
       </div>
 
       <div class="form-group">
@@ -39,35 +38,9 @@
 
     <h4>Response from Granite AI:</h4>
     <div id="response" class="alert alert-info" role="alert">
-      Your response will appear here.
+      {{ response if response else 'Your response will appear here.' }}
+      {{ error if error else '' }}
     </div>
   </div>
-
-  <script>
-    $(document).ready(function () {
-      $('#chatForm').submit(function (event) {
-        event.preventDefault();  // Prevent the form from submitting the traditional way
-
-        var formData = new FormData(this);  // Prepare the form data
-
-        $.ajax({
-          type: 'POST',
-          url: '/chat',
-          data: formData,
-          processData: false,
-          contentType: false,
-          success: function (response) {
-            console.log('Response received:', response); // Log the response for debugging
-            $('#response').text(response.result || 'No response received');
-          },
-          error: function (error) {
-            console.error('Error:', error); // Log the error for debugging
-            $('#response').text('An error occurred.');
-          }
-        });
-      });
-    });
-  </script>
-
 </body>
 </html>
