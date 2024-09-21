@@ -3,6 +3,9 @@ from forms import PredictForm
 from forms import ChatForm
 import requests
 import json
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
 app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -75,19 +78,24 @@ def predict():
         # If form validation fails, re-render the template with error messages
         return render_template('predict.html', form=form, errors=form.errors)
     
-
 @app.route('/chat', methods=['GET', 'POST'])
 def chat():
-    form = ChatForm()  # Initialize the form
-    if request.method == 'POST' and form.validate_on_submit():
-        message = form.message.data
+    response_text = ""  # Initialize a variable to hold the response
+    error_message = ""  # Initialize a variable to hold any error message
+
+    if request.method == "GET":
+        return render_template("chat.html", response=response_text, error=error_message)  # Render the initial form
+
+    # Handle POST request
+    elif request.method == "POST":
+        message = request.form.get('message')
         document = request.files.get('document')
 
         # Prepare request to the AI model
         url = "https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"
         body = {
             "input": f"""<|system|>
-            You are Granite Chat, an AI language model developed by IBM...
+            You are Granite Chat, an AI language model developed by IBM. You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior. You always respond to greetings (for example, hi, hello, g'day, morning, afternoon, evening, night, what's up, nice to meet you, sup, etc) with "Hello! I am Granite Chat, created by IBM. How can I help you today?". Please do not say anything else and do not start a conversation.
             <|assistant|>
             {message}
             """,
@@ -97,7 +105,7 @@ def chat():
                 "repetition_penalty": 1.05
             },
             "model_id": "ibm/granite-13b-chat-v2",
-            "project_id": "acaf9312-4593-4343-b3c4-3ddd33f7f9e3",
+            "project_id": "c66b34f5-b590-4197-96aa-37b821f93631",
             "moderations": {
                 "hap": {
                     "input": {
@@ -121,7 +129,7 @@ def chat():
         headers = {
             "Accept": "application/json",
             "Content-Type": "application/json",
-            "Authorization": "Bearer NEW_ACCESS_TOKEN"  # Replace with your actual token
+            "Authorization": "Bearer eyJraWQiOiIyMDI0MDkwMjA4NDIiLCJhbGciOiJSUzI1NiJ9.eyJpYW1faWQiOiJJQk1pZC02NjgwMDBYNjFPIiwiaWQiOiJJQk1pZC02NjgwMDBYNjFPIiwicmVhbG1pZCI6IklCTWlkIiwianRpIjoiZjhkNTFlNjUtYzJlMy00YzZjLTg1MTEtZTU2MGFkMjMzY2M5IiwiaWRlbnRpZmllciI6IjY2ODAwMFg2MU8iLCJnaXZlbl9uYW1lIjoiUGFyaW4iLCJmYW1pbHlfbmFtZSI6IkFjaGFyeWEiLCJuYW1lIjoiUGFyaW4gQWNoYXJ5YSIsImVtYWlsIjoiYWNoYXJ5YXBhcmluMDVAZ21haWwuY29tIiwic3ViIjoiYWNoYXJ5YXBhcmluMDVAZ21haWwuY29tIiwiYXV0aG4iOnsic3ViIjoiYWNoYXJ5YXBhcmluMDVAZ21haWwuY29tIiwiaWFtX2lkIjoiSUJNaWQtNjY4MDAwWDYxTyIsIm5hbWUiOiJQYXJpbiBBY2hhcnlhIiwiZ2l2ZW5fbmFtZSI6IlBhcmluIiwiZmFtaWx5X25hbWUiOiJBY2hhcnlhIiwiZW1haWwiOiJhY2hhcnlhcGFyaW4wNUBnbWFpbC5jb20ifSwiYWNjb3VudCI6eyJ2YWxpZCI6dHJ1ZSwiYnNzIjoiYmFjN2E4NzUxZWU5NDk4NTk4NGFhMGZiNmM1N2YzOWQiLCJpbXNfdXNlcl9pZCI6IjEyNjkyMTg3IiwiZnJvemVuIjp0cnVlLCJpbXMiOiIyNzQ4MTIyIn0sImlhdCI6MTcyNjg3ODk3NiwiZXhwIjoxNzI2ODgyNTc2LCJpc3MiOiJodHRwczovL2lhbS5jbG91ZC5pYm0uY29tL29pZGMvdG9rZW4iLCJncmFudF90eXBlIjoidXJuOmlibTpwYXJhbXM6b2F1dGg6Z3JhbnQtdHlwZTphcGlrZXkiLCJzY29wZSI6ImlibSBvcGVuaWQiLCJjbGllbnRfaWQiOiJkZWZhdWx0IiwiYWNyIjoxLCJhbXIiOlsicHdkIl19.kqsGFkFTCVjRb5aVHNZeY0FAxKQUfoH4UoGu7a11chettqlEq0UNHBHCfhp5ZlTay6eVATFZROiAbklzB1hc81n0pgnImCN8f4INbUhorDLBIvRhLPrCpEbNEg6Yy0uLlKGfVNdVwEgPle3ACKLAIMMQSxDx36t-lnSH1SqE4PQhtwVjQUtp2HrxwecsTJNtcmFGPgm7aLLoOwms8g38xNuNeshZ-xRPB8Bh_t2BjJOA9FVYVS2bgST5HCmJrJWjo0gx1lvut5iMSHqQzdV5efpuXNi7YIsGMufaxkCHHxpDdrEdn9Q-lyGtc5RXT_0iY4W-oUPIa7yPXbvv4UT8oQ"
         }
 
         # Make the request to the AI model
@@ -129,13 +137,19 @@ def chat():
             response = requests.post(url, headers=headers, json=body)
             response.raise_for_status()  # Raise an error for HTTP errors
             data = response.json()
-            
+
             result = data.get('results', [{}])[0].get('generated_text', 'No response received')
-            return render_template('chat.html', form=form, response=result)  # Pass the result to the template
+            
+            # Log the response
+            logging.info(f'Response from Granite AI: {result}')
+
+            # Set response_text to display in the form
+            response_text = result
         except requests.exceptions.RequestException as e:
-            return render_template('chat.html', form=form, error=f'An error occurred: {str(e)}')
-    
-    return render_template('chat.html', form=form)  # Render the template with the form
+            error_message = f'An error occurred: {str(e)}'
+            logging.error(error_message)  # Log the error
+
+    return render_template('chat.html', response=response_text, error=error_message)  # Render the template with the response
 
 if __name__ == '__main__':
     app.run(debug=True)
